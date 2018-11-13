@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import openSocket from 'socket.io-client';
 import Header from '../Header';
+import { Redirect } from 'react-router-dom';
 import { Button, Input, Label, FormGroup, Form, Container, InputGroup, InputGroupAddon, Row, Col } from 'reactstrap';
 
 function Index(props) {
@@ -33,16 +34,14 @@ class RoomMenu extends Component {
     componentDidMount() {
         //check if room exists
         this.socket.on('index/roomExists', this.roomExists);
-        console.log("loaded");
     }
 
     componentWillUnmount() {
         this.socket.removeListener('index/roomExists', this.roomExists);
+        this.socket.disconnect();
     }
 
     roomExists = (roomExists) => {
-
-        console.log('!!!!!!!!!!!!');
 
         this.setState({ createButtonDisabled: true });
 
@@ -55,6 +54,7 @@ class RoomMenu extends Component {
             });
         } else {
             this.setState({
+                createButtonDisabled: false,
                 createPartyHelpText: {
                     text: "That name is available!",
                     color: "success"
@@ -68,7 +68,7 @@ class RoomMenu extends Component {
         this.socket.emit('index/roomInputNameChange', e.target.value);
         this.setState({
             createPartyName: e.target.value,
-            createButtonDisabled: e.target.value == '',
+            createButtonDisabled: true,
             createPartyHelpText: null
         });
     }
@@ -87,6 +87,15 @@ class RoomMenu extends Component {
     }
 
     render() {
+
+        if (this.state.redirectCreate) {
+            return <Redirect push to={"/room/" + this.state.createPartyName} />
+        }
+
+        if (this.state.redirectJoin) {
+            return <Redirect push to={"/room/" + this.state.joinPartyName} />
+        }
+
         return (
             <Container className="my-5">
                 <RoomInput label="Create Party"

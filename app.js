@@ -47,8 +47,17 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
             socket.on('room/connection', room => {
                 console.log('User joined ' + room);
-                socket.join(room);
-                socket.room = room;
+
+                //check existence of room name
+                db.listCollections({ name: room }).toArray()
+                    .then(names => {
+                        socket.emit('index/roomExists', names.length === 1);
+
+                        if(names.length == 1) {
+                            socket.join(room);
+                            socket.room = room;
+                        }
+                    });
             });
 
             socket.on('room/deleteSong', id => {
