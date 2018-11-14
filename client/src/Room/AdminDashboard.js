@@ -5,8 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFastForward } from '@fortawesome/free-solid-svg-icons';
 
 const opts = {
-    height: '144',
-    width: '256',
+    height: '240',
+    width: '426',
     playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1
     }
@@ -35,7 +35,6 @@ class AdminDashboard extends Component {
                 <Alert color="info" isOpen={this.state.alertVisible} toggle={this.onDismiss}>
                     <h4 className="alert-heading">You are the host of this room!</h4>
                     <p className="mb-0">Audio will play out of this device.</p>
-
                 </Alert>
 
                 <YouTubePlayer

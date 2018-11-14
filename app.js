@@ -79,8 +79,14 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                         socket.emit('index/roomExists', names.length === 1);
 
                         if(names.length == 1) {
+
                             socket.join(room);
                             socket.room = room;
+
+                            db.collection(room).findOne({ name: 'songQueue' })
+                                .then(songQueue => {
+                                    socket.emit('room/syncSongs', songQueue.songQueue);
+                                });
                         }
                     });
             });
@@ -128,19 +134,20 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
                 ytInfo(vidID)
                     .then(info => {
-
-                        db.collection(socket.room).updateOne(
+                        return db.collection(socket.room).updateOne(
                             { name: 'songQueue' },
                             { $push: 
                                 {
-                                    imgSrc: info.thumbnailUrl,
-                                    title: info.title,
-                                    artist: info.owner,
-                                    url: info.url,
-                                    vidId: info.videoId,
-                                    upvotes: 0,
-                                    downvotes: 0
-                                } 
+                                    songQueue : {
+                                        imgSrc: info.thumbnailUrl,
+                                        title: info.title,
+                                        artist: info.owner,
+                                        url: info.url,
+                                        vidId: info.videoId,
+                                        upvotes: 0,
+                                        downvotes: 0
+                                    } 
+                                }
                             }
                         );
                     })
@@ -150,6 +157,17 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                             text: 'Video successfully added',
                             color: 'success'
                         });
+
+                        db.collection(socket.room).findOne({ name: 'songQueue' })
+                            .then((songQueue) => {
+
+                                console.log('!!!');
+                                console.log(songQueue);
+                                
+                                socket.emit('room/syncSongs', songQueue.songQueue);
+
+                            });
+
                     })
                     .catch(err => {
                         

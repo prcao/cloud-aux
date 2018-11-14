@@ -15,7 +15,8 @@ class Room extends Component {
         this.state = {
             room: room,
             loading: true,
-            exists: false
+            exists: false,
+            songQueue: []
         };
 
         this.socket = openSocket();
@@ -24,9 +25,19 @@ class Room extends Component {
     componentDidMount() {
         //check if this room exists
         this.socket.emit('room/connection', this.state.room);
+
         this.socket.on('index/roomExists', (exists) => {
             this.setState({ exists: exists, loading: false });
         });
+
+        this.socket.on('room/syncSongs', (songQueue) => {
+            this.setState({ songQueue: songQueue });
+        });
+    }
+
+    //request next song from db
+    onYoutubeEnd = () => {
+
     }
 
     render() {
@@ -40,18 +51,24 @@ class Room extends Component {
         if(!this.state.exists) {
             body = <div>{this.state.room} does not exist</div>;
         } else {
+
+            let vidId = '';
+            
+            if(this.state.songQueue[0]) {
+                vidId = this.state.songQueue[0].vidId;
+            }
+            
             body = 
             (
                 <div>
-
-                    
-
-
                     <Container className='my-5'>
                         <AddSong
                             socket={this.socket}
                         />
-                        <AdminDashboard></AdminDashboard>
+
+                        <AdminDashboard
+                            vidId={vidId}
+                        />
                     </Container>
 
                 </div>
