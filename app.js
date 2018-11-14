@@ -179,6 +179,20 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
             });
 
+            socket.on('room/nextSong', () => {
+
+                console.log("Next song requested");
+
+                db.collection(socket.room).updateOne(
+                    { name: 'songQueue' },
+                    { $pop: { songQueue: -1 }}
+                ).then(() => {
+                    return db.collection(socket.room).findOne({ name: 'songQueue' });
+                }).then((songQueue) => {
+                    socket.emit('room/syncSongs', songQueue.songQueue);
+                });
+            });
+
             socket.on('room/deleteSong', id => {
 
             });

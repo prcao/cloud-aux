@@ -36,8 +36,11 @@ class Room extends Component {
     }
 
     //request next song from db
-    onYoutubeEnd = () => {
-
+    onYoutubeEnd = (e) => {
+        console.log("NEXT!");
+        if(this.state.songQueue.length) {
+            this.socket.emit('room/nextSong');
+        }
     }
 
     render() {
@@ -57,7 +60,7 @@ class Room extends Component {
             if(this.state.songQueue[0]) {
                 vidId = this.state.songQueue[0].vidId;
             }
-            
+
             body = 
             (
                 <div>
@@ -68,6 +71,7 @@ class Room extends Component {
 
                         <AdminDashboard
                             vidId={vidId}
+                            onYoutubeEnd={this.onYoutubeEnd}
                         />
                     </Container>
 

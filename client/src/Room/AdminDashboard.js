@@ -43,7 +43,7 @@ class AdminDashboard extends Component {
                 />
 
                 <div className="text-center">
-                    <Button outline className="my-3" onClick={this.props.onYouTubeEnd}>
+                    <Button outline className="my-3" onClick={this.props.onYoutubeEnd}>
                         <FontAwesomeIcon icon={faFastForward} />
                         &nbsp;
                         Skip
@@ -52,7 +52,6 @@ class AdminDashboard extends Component {
             </Container>
         );
     }
-
 }
 
 class YouTubePlayer extends Component {
