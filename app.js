@@ -7,6 +7,7 @@ require('dotenv').config();
 var app = express();
 var server = require('http').Server(app);
 var apiRouter = require('./routes/api');
+var ytInfo = require('youtube-info');
 
 const port = process.env.PORT || 5000;
 
@@ -37,11 +38,35 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
             socket.on('index/roomInputNameChange', room => {
 
-
                 //check existence of room name
                 db.listCollections({ name: room }).toArray()
                     .then(names => {
                         socket.emit('index/roomExists', names.length === 1);
+                    });
+            });
+
+            socket.on('index/createRoom', room => {
+
+                console.log('User created ' + room);
+
+                //check existence of room name
+                db.listCollections({ name: room }).toArray()
+                    .then(names => {
+                        
+                        if(names.length == 0) {
+                            db.createCollection(room)
+                                .then(r => {
+                                    db.collection(room).insertMany([
+                                        {
+                                            name: 'songQueue',
+                                            songQueue: []
+                                        },
+                                        {
+                                            name: 'info'
+                                        }
+                                    ]);
+                                });
+                        }
                     });
             });
 
@@ -58,6 +83,82 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                             socket.room = room;
                         }
                     });
+            });
+
+            socket.on('room/addSong', url => {
+                
+                //this room doesnt exist
+                if(!socket.room) return;
+
+                //check if supplied url is valid
+                let urlObject;
+
+                try { urlObject = new URL(url) }
+                catch(_) { 
+                    socket.emit('room/addSongResponse', {
+                        text: 'Enter a valid youtube URL',
+                        color: 'danger'
+                    });
+
+                    return;
+                }
+
+                const ytShort = 'youtu.be/';
+                let vidID;
+                let index = url.indexOf(ytShort);
+
+                //youtu.be/vidID
+                if(index !== -1) {
+                    vidID = url.substring(index + ytShort.length);
+                }
+
+                //youtube.com//watch?v=vidID
+                else {
+                    vidID = urlObject.searchParams.get('v'); 
+                }
+
+                if(vidID === null) {
+                    socket.emit('room/addSongResponse', {
+                        text: 'Enter a valid youtube URL',
+                        color: 'danger'
+                    });
+
+                    return;
+                }
+
+                ytInfo(vidID)
+                    .then(info => {
+
+                        db.collection(socket.room).updateOne(
+                            { name: 'songQueue' },
+                            { $push: 
+                                {
+                                    imgSrc: info.thumbnailUrl,
+                                    title: info.title,
+                                    artist: info.owner,
+                                    url: info.url,
+                                    vidId: info.videoId,
+                                    upvotes: 0,
+                                    downvotes: 0
+                                } 
+                            }
+                        );
+                    })
+                    .then(res => {
+                        
+                        socket.emit('room/addSongResponse', {
+                            text: 'Video successfully added',
+                            color: 'success'
+                        });
+                    })
+                    .catch(err => {
+                        
+                        socket.emit('room/addSongResponse', {
+                            text: err.msg,
+                            color: 'danger'
+                        });
+                    });
+
             });
 
             socket.on('room/deleteSong', id => {

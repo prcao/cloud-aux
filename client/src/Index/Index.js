@@ -76,13 +76,20 @@ class RoomMenu extends Component {
     handleJoinChange = (e) => {
         this.setState({
             joinPartyName: e.target.value,
-            joinButtonDisabled: e.target.value == ''
+            joinButtonDisabled: e.target.value === ''
         });
     }
 
     joinParty = () => {
         this.setState({
             redirectJoin: true
+        });
+    }
+
+    createParty = () => {
+        this.socket.emit('index/createRoom', this.state.createPartyName);
+        this.setState({
+            redirectCreate: true
         });
     }
 
