@@ -30,74 +30,60 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
     .then(client => {
 
         const db = client.db();
+        const collection = db.collection('rooms');
 
         //SOCKETIO API
         io.on('connection', socket => {
 
             console.log('User connected');
 
-            socket.on('index/roomInputNameChange', room => {
+            socket.on('index/roomInputNameChange', roomName => {
 
                 //check existence of room name
-                db.listCollections({ name: room }).toArray()
-                    .then(names => {
-                        socket.emit('index/roomExists', names.length === 1);
+                collection.findOne({ name: roomName })
+                    .then(room => {
+                        socket.emit('index/roomExists', !!room);
                     });
             });
 
-            socket.on('index/createRoom', (room, storeKey) => {
+            socket.on('index/createRoom', (roomName, storeKey) => {
 
-                console.log('User created ' + room);
+                console.log('User created ' + roomName);
 
                 //check existence of room name
-                db.listCollections({ name: room }).toArray()
-                    .then(names => {
+                collection.findOne({ name: roomName })
+                    .then(room => {
                         
-                        if(names.length == 0) {
-                            db.createCollection(room)
-                                .then(r => {
+                        if(!room) {
 
-                                    let key = room + Math.random().toString(36);
+                            let key = roomName + Math.random().toString(36);
 
-                                    db.collection(room).insertMany([
-                                        {
-                                            name: 'songQueue',
-                                            songQueue: []
-                                        },
-                                        {
-                                            name: 'info',
-                                            key: key
-                                        }
-                                    ]);
+                            collection.insertOne({
+                                name: roomName,
+                                key: key,
+                                songQueue: []
+                            });
 
-                                    //store admin key on client
-                                    storeKey(key);
-                                });
+                            //store admin key on client
+                            storeKey(key);
                         }
                     });
             });
 
-            socket.on('room/connection', (room, key, isAdmin) => {
+            socket.on('room/connection', (roomName, key, isAdmin) => {
 
                 //check existence of room name
-                db.listCollections({ name: room }).toArray()
-                    .then(names => {
-                        socket.emit('index/roomExists', names.length === 1);
+                collection.findOne({ name: roomName })
+                    .then(room => {
+                        socket.emit('index/roomExists', !!room);
 
-                        if(names.length == 1) {
+                        if(room) {
 
-                            socket.join(room);
-                            socket.room = room;
+                            socket.join(roomName);
+                            socket.room = roomName;
 
-                            db.collection(room).findOne({ name: 'songQueue' })
-                                .then(songQueue => {
-                                    socket.emit('room/syncSongs', songQueue.songQueue);
-                                });
-                            
-                            db.collection(room).findOne({ name: 'info' })
-                                .then(info => {
-                                    isAdmin(key === info.key);
-                                });
+                            socket.emit('room/syncSongs', room.songQueue);
+                            isAdmin(room.key === key);
                         }
                     });
             });
@@ -145,8 +131,8 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
                 ytInfo(vidID)
                     .then(info => {
-                        return db.collection(socket.room).updateOne(
-                            { name: 'songQueue' },
+                        return collection.updateOne(
+                            { name: socket.room },
                             { $push: 
                                 {
                                     songQueue : {
@@ -169,13 +155,13 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                             color: 'success'
                         });
 
-                        db.collection(socket.room).findOne({ name: 'songQueue' })
-                            .then((songQueue) => {
+                        collection.findOne({ name: socket.room })
+                            .then(room => {
 
                                 console.log('!!!');
-                                console.log(songQueue);
+                                console.log(room);
                                 
-                                io.to(socket.room).emit('room/syncSongs', songQueue.songQueue);
+                                io.to(socket.room).emit('room/syncSongs', room.songQueue);
 
                             });
 
@@ -194,13 +180,13 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
                 console.log("Next song requested");
 
-                db.collection(socket.room).updateOne(
-                    { name: 'songQueue' },
+                collection.updateOne(
+                    { name: socket.room },
                     { $pop: { songQueue: -1 }}
                 ).then(() => {
-                    return db.collection(socket.room).findOne({ name: 'songQueue' });
-                }).then((songQueue) => {
-                    socket.emit('room/syncSongs', songQueue.songQueue);
+                    return collection.findOne({ name: socket.room });
+                }).then(room => {
+                    socket.emit('room/syncSongs', room.songQueue);
                 });
             });
 
