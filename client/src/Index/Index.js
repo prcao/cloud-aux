@@ -33,7 +33,7 @@ class RoomMenu extends Component {
     
     componentDidMount() {
         //check if room exists
-        this.socket.on('index/roomExists', this.roomExists);
+        this.socket.on('index/roomExists', this.roomExists);        
     }
 
     componentWillUnmount() {
@@ -87,9 +87,21 @@ class RoomMenu extends Component {
     }
 
     createParty = () => {
-        this.socket.emit('index/createRoom', this.state.createPartyName);
-        this.setState({
-            redirectCreate: true
+        
+        this.socket.emit('index/createRoom', this.state.createPartyName, key => {
+           
+            //cache admin key on client
+            if(!localStorage.keys) {
+                localStorage.setItem('keys', '{}');
+            }
+
+            let keys = JSON.parse(localStorage.getItem('keys'));
+            keys[this.state.createPartyName] = key;
+            localStorage.keys = JSON.stringify(keys);
+
+            this.setState({
+                redirectCreate: true
+            });
         });
     }
 

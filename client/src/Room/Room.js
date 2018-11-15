@@ -4,6 +4,7 @@ import openSocket from 'socket.io-client';
 import Header from '../Header';
 import AdminDashboard from './AdminDashboard';
 import { Container, Input, InputGroup, InputGroupAddon, Button  } from 'reactstrap';
+import SongCard from './SongCard';
 
 class Room extends Component {
 
@@ -16,6 +17,7 @@ class Room extends Component {
             room: room,
             loading: true,
             exists: false,
+            isAdmin: false,
             songQueue: []
         };
 
@@ -23,8 +25,16 @@ class Room extends Component {
     }
 
     componentDidMount() {
+
+        let key = '';
+        if(localStorage.keys && JSON.parse(localStorage.keys)[this.state.room]) {
+            key = JSON.parse(localStorage.keys)[this.state.room];
+        }
+
         //check if this room exists
-        this.socket.emit('room/connection', this.state.room);
+        this.socket.emit('room/connection', this.state.room, key, isAdmin => {
+            this.setState({ isAdmin: isAdmin });
+        });
 
         this.socket.on('index/roomExists', (exists) => {
             this.setState({ exists: exists, loading: false });
@@ -37,7 +47,6 @@ class Room extends Component {
 
     //request next song from db
     onYoutubeEnd = (e) => {
-        console.log("NEXT!");
         if(this.state.songQueue.length) {
             this.socket.emit('room/nextSong');
         }
@@ -56,9 +65,19 @@ class Room extends Component {
         } else {
 
             let vidId = '';
+            let songCardList = (
+                <p className="text-muted">There are no songs in the queue. Why not request one?</p>
+            );
             
-            if(this.state.songQueue[0]) {
+            if(this.state.songQueue.length > 0) {
                 vidId = this.state.songQueue[0].vidId;
+                songCardList = (
+                    <SongCardList
+                        room={this.state.room}
+                        songs={this.state.songQueue}
+                        socket={this.socket}
+                    />
+                );
             }
 
             body = 
@@ -69,10 +88,18 @@ class Room extends Component {
                             socket={this.socket}
                         />
 
-                        <AdminDashboard
-                            vidId={vidId}
-                            onYoutubeEnd={this.onYoutubeEnd}
-                        />
+                        {this.state.isAdmin &&
+
+                            <AdminDashboard
+                                vidId={vidId}
+                                onYoutubeEnd={this.onYoutubeEnd}
+                            />
+                        }
+
+                        <div className="my-3">
+                            <h2>Next up</h2>
+                            {songCardList}
+                        </div>
                     </Container>
 
                 </div>
@@ -144,6 +171,23 @@ class AddSong extends Component {
             </div>
         );
     }
+}
+
+function SongCardList(props) {
+    let list = props.songs.map(song => 
+        <SongCard
+            key={song.url}
+            room={props.room}
+            socket={props.socket}
+            imgSrc={song.imgSrc}
+            title={song.title}
+            artist={song.artist}
+            url={song.url}
+            numUpvotes={song.numUpvotes}
+            numDownvotes={song.numDownvotes} />
+    );
+
+    return list;
 }
 
 export default Room;

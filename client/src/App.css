@@ -4,29 +4,53 @@
 
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
+  height: 80px;
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.App-title {
+  font-size: 1.5em;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+.long-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+* {
+  font-family: 'Roboto'
 }
 
 @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
+
+iframe {
+  display: block;
+  margin: 0 auto;
+}
+
+.vcentered {
+  vertical-align: middle;
+}
+
+.compact-card + .compact-card {
+  border-top: 1px solid lightgray;
+}
+
+.compact-card {
+  padding: 16px;
+}
+
+a.nav-link { color: inherit; } 

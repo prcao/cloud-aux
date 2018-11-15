@@ -45,7 +45,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                     });
             });
 
-            socket.on('index/createRoom', room => {
+            socket.on('index/createRoom', (room, storeKey) => {
 
                 console.log('User created ' + room);
 
@@ -56,22 +56,28 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                         if(names.length == 0) {
                             db.createCollection(room)
                                 .then(r => {
+
+                                    let key = room + Math.random().toString(36);
+
                                     db.collection(room).insertMany([
                                         {
                                             name: 'songQueue',
                                             songQueue: []
                                         },
                                         {
-                                            name: 'info'
+                                            name: 'info',
+                                            key: key
                                         }
                                     ]);
+
+                                    //store admin key on client
+                                    storeKey(key);
                                 });
                         }
                     });
             });
 
-            socket.on('room/connection', room => {
-                console.log('User joined ' + room);
+            socket.on('room/connection', (room, key, isAdmin) => {
 
                 //check existence of room name
                 db.listCollections({ name: room }).toArray()
@@ -86,6 +92,11 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                             db.collection(room).findOne({ name: 'songQueue' })
                                 .then(songQueue => {
                                     socket.emit('room/syncSongs', songQueue.songQueue);
+                                });
+                            
+                            db.collection(room).findOne({ name: 'info' })
+                                .then(info => {
+                                    isAdmin(key === info.key);
                                 });
                         }
                     });
@@ -164,7 +175,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                                 console.log('!!!');
                                 console.log(songQueue);
                                 
-                                socket.emit('room/syncSongs', songQueue.songQueue);
+                                io.to(socket.room).emit('room/syncSongs', songQueue.songQueue);
 
                             });
 
