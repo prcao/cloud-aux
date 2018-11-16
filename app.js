@@ -88,7 +88,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                     });
             });
 
-            socket.on('room/addSong', url => {
+            socket.on('room/addSong', (url, response) => {
                 
                 //this room doesnt exist
                 if(!socket.room) return;
@@ -98,11 +98,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
                 try { urlObject = new URL(url) }
                 catch(_) { 
-                    socket.emit('room/addSongResponse', {
-                        text: 'Enter a valid youtube URL',
-                        color: 'danger'
-                    });
-
+                    response('Enter a valid YouTube URL', 'danger');
                     return;
                 }
 
@@ -121,11 +117,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                 }
 
                 if(vidID === null) {
-                    socket.emit('room/addSongResponse', {
-                        text: 'Enter a valid youtube URL',
-                        color: 'danger'
-                    });
-
+                    response('Enter a valid YouTube URL', 'danger');
                     return;
                 }
 
@@ -149,11 +141,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                         );
                     })
                     .then(res => {
-                        
-                        socket.emit('room/addSongResponse', {
-                            text: 'Video successfully added',
-                            color: 'success'
-                        });
+                        response('Video successfully added', 'success');
 
                         collection.findOne({ name: socket.room })
                             .then(room => {
@@ -162,16 +150,11 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                                 console.log(room);
                                 
                                 io.to(socket.room).emit('room/syncSongs', room.songQueue);
-
                             });
 
                     })
                     .catch(err => {
-                        
-                        socket.emit('room/addSongResponse', {
-                            text: err.msg,
-                            color: 'danger'
-                        });
+                        response('Enter a valid YouTube URL', 'danger');
                     });
 
             });
@@ -186,7 +169,7 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
                 ).then(() => {
                     return collection.findOne({ name: socket.room });
                 }).then(room => {
-                    socket.emit('room/syncSongs', room.songQueue);
+                    io.to(socket.room).emit('room/syncSongs', room.songQueue);
                 });
             });
 
