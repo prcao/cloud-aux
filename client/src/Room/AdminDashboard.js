@@ -39,7 +39,7 @@ class AdminDashboard extends Component {
 
                 <YouTubePlayer
                     vidId={this.props.vidId}
-                    onEnd={this.props.onYouTubeEnd}
+                    onEnd={this.props.onYoutubeEnd}
                 />
 
                 <div className="text-center">
