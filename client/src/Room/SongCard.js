@@ -12,8 +12,57 @@ class SongCard extends Component {
 
         this.state = {
             upvoted: false,
-            downvoted: false,
+            downvoted: false
         };
+    }
+
+    onUpvote = () => {
+        
+        this.setState(function (prevState, props) {
+            let toReturn = {
+                upvoted: !prevState.upvoted,
+            }
+
+            if (prevState.upvoted) {
+                this.props.socket.emit('room/unupvote', props.url);
+            }
+
+            else {
+                this.props.socket.emit('room/upvote', props.url);
+
+                if (prevState.downvoted) {
+                    toReturn.downvoted = false;
+                    this.props.socket.emit('room/undownvote', props.url);
+                }
+            }
+
+            return toReturn;
+        });
+    }
+
+    onDownvote = () => {
+        
+        this.setState(function (prevState, props) {
+
+            let toReturn = {
+                downvoted: !prevState.downvoted,
+            }
+
+            if (prevState.downvoted) {
+                this.props.socket.emit('room/undownvote', props.url);
+            }
+
+            else {
+                this.props.socket.emit('room/downvote', props.url);
+
+                if (prevState.upvoted) {
+                    toReturn.upvoted = false;
+                    this.props.socket.emit('room/unupvote', props.url);
+                }
+            }
+
+            return toReturn;
+        });
     }
 
     render() {
@@ -46,8 +95,8 @@ class SongCard extends Component {
                                 <Col sm="1" xs="2">
 
                                     <VoteScore
-                                        numUpvotes={this.props.numUpvotes}
-                                        numDownvotes={this.props.numDownvotes}
+                                        upvotes={this.props.upvotes}
+                                        downvotes={this.props.downvotes}
                                         upvoted={this.state.upvoted}
                                         downvoted={this.state.downvoted}
                                         onUpvote={this.onUpvote}
@@ -91,8 +140,8 @@ class VoteScore extends Component {
     render() {
         return (
             <div>
-                <VoteIcon icon={faThumbsUp} onClick={this.props.onUpvote} numVotes={this.props.numUpvotes} isClicked={this.props.upvoted} color="#00ff00" />
-                <VoteIcon icon={faThumbsDown} onClick={this.props.onDownvote} numVotes={this.props.numDownvotes} isClicked={this.props.downvoted} color="#ff0000" />
+                <VoteIcon icon={faThumbsUp} onClick={this.props.onUpvote} numVotes={this.props.upvotes} isClicked={this.props.upvoted} color="#00ff00" />
+                <VoteIcon icon={faThumbsDown} onClick={this.props.onDownvote} numVotes={this.props.downvotes} isClicked={this.props.downvoted} color="#ff0000" />
             </div>
         );
     }

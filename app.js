@@ -177,20 +177,53 @@ MongoClient.connect(process.env.MONGO_URI, { useNewUrlParser: true })
 
             });
 
-            socket.on('room/upvote', id => {
+            socket.on('room/upvote', url => {
+
+                console.log("upvote recieved");
+                
+                collection.updateOne(
+                    { name: socket.room, 'songQueue.url': url },
+                    { $inc: { 'songQueue.$.upvotes': 1}}
+                ).then(() => {
+                    return collection.findOne({ name: socket.room });
+                }).then(room => {
+                    console.log(room.songQueue);
+                    io.to(socket.room).emit('room/syncSongs', room.songQueue);
+                });
 
             });
 
-            socket.on('room/unupvote', id => {
-
+            socket.on('room/unupvote', url => {
+                collection.updateOne(
+                    { name: socket.room, 'songQueue.url': url },
+                    { $inc: { 'songQueue.$.upvotes': -1}}
+                ).then(() => {
+                    return collection.findOne({ name: socket.room });
+                }).then(room => {
+                    io.to(socket.room).emit('room/syncSongs', room.songQueue);
+                });
             });
 
-            socket.on('room/downvote', id => {
-
+            socket.on('room/downvote', url => {
+                collection.updateOne(
+                    { name: socket.room, 'songQueue.url': url },
+                    { $inc: { 'songQueue.$.downvotes': 1}}
+                ).then(() => {
+                    return collection.findOne({ name: socket.room });
+                }).then(room => {
+                    io.to(socket.room).emit('room/syncSongs', room.songQueue);
+                });
             });
 
-            socket.on('room/undownvote', id => {
-
+            socket.on('room/undownvote', url => {
+                collection.updateOne(
+                    { name: socket.room, 'songQueue.url': url },
+                    { $inc: { 'songQueue.$.downvotes': -1}}
+                ).then(() => {
+                    return collection.findOne({ name: socket.room });
+                }).then(room => {
+                    io.to(socket.room).emit('room/syncSongs', room.songQueue);
+                });
             });
 
             socket.on('room/disconnect', () => {

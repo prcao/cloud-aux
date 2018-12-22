@@ -18,11 +18,11 @@ class CompactSongCard extends SongCard {
                     </Col>
 
                     <Col xs="2">
-                        <VoteIcon icon={faThumbsUp} onClick={this.onUpvote} numVotes={this.props.numUpvotes} isClicked={this.state.upvoted} color="#00ff00" />
+                        <VoteIcon icon={faThumbsUp} onClick={this.onUpvote} numVotes={this.props.upvotes} isClicked={this.state.upvoted} color="#00ff00" />
                     </Col>
 
                     <Col xs="2">
-                        <VoteIcon icon={faThumbsDown} onClick={this.onDownvote} numVotes={this.props.numDownvotes} isClicked={this.state.downvoted} color="#ff0000" />
+                        <VoteIcon icon={faThumbsDown} onClick={this.onDownvote} numVotes={this.props.downvotes} isClicked={this.state.downvoted} color="#ff0000" />
                     </Col>
                 </Row>
             </div>

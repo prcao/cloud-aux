@@ -35,6 +35,14 @@ class Room extends Component {
             key = JSON.parse(localStorage.keys)[this.state.room];
         }
 
+        //setup room vote cache
+        if(!localStorage.rooms) {
+            localStorage.rooms = '{}';
+        }
+        let rooms = JSON.parse(localStorage.rooms);
+        rooms[this.state.room] = {};
+        localStorage.rooms = JSON.stringify(rooms);
+
         //check if this room exists
         this.socket.emit('room/connection', this.state.room, key, isAdmin => {
             this.setState({ isAdmin: isAdmin });
@@ -95,8 +103,8 @@ class Room extends Component {
                             title={song.title}
                             artist={song.artist}
                             url={song.url}
-                            numUpvotes={song.numUpvotes}
-                            numDownvotes={song.numDownvotes} />
+                            upvotes={song.upvotes}
+                            downvotes={song.downvotes} />
                     );
                 } else {
                     currentSongCard = (
@@ -108,8 +116,8 @@ class Room extends Component {
                             title={song.title}
                             artist={song.artist}
                             url={song.url}
-                            numUpvotes={song.numUpvotes}
-                            numDownvotes={song.numDownvotes} />
+                            upvotes={song.upvotes}
+                            downvotes={song.downvotes} />
                     );
                 }
                 
@@ -268,8 +276,8 @@ function SongCardList(props) {
                 title={song.title}
                 artist={song.artist}
                 url={song.url}
-                numUpvotes={song.numUpvotes}
-                numDownvotes={song.numDownvotes} />
+                upvotes={song.upvotes}
+                downvotes={song.downvotes} />
         );
     }
 
@@ -283,8 +291,8 @@ function SongCardList(props) {
                 title={song.title}
                 artist={song.artist}
                 url={song.url}
-                numUpvotes={song.numUpvotes}
-                numDownvotes={song.numDownvotes} />
+                upvotes={song.upvotes}
+                downvotes={song.downvotes} />
         );
     }
 
