@@ -41,7 +41,7 @@ class Header extends Component {
         return (
             <Navbar color="dark" light expand="md">
 
-                <NavbarBrand className="text-white">Listen Together</NavbarBrand>
+                <NavbarBrand className="text-white">Cloud Aux</NavbarBrand>
                 <NavbarToggler onClick={this.toggleNavbar}></NavbarToggler>
 
                 <Collapse isOpen={this.state.navbarOpened} navbar>
